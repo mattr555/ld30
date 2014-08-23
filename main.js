@@ -14,10 +14,13 @@ window.onload = function(){
 	}
 
 	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey,
-		score = 0;
+		score = 0,
+		screenWidth = 640,
+		screenHeight = 480;
 
 	function create(){
 		game.physics.startSystem(Phaser.Physics.ARCADE);
+		game.world.setBounds(0,0,640,480*2);
 
 		//backgrounds
 		backgrounds = game.add.group();
@@ -26,12 +29,12 @@ window.onload = function(){
 		//platforms
 		platforms = game.add.group();
 		platforms.enableBody = true;
-		var ground = platforms.create(0, game.world.height-64, 'ground');
+		var ground = platforms.create(0, screenHeight-64, 'ground');
 		ground.body.immovable = true;
 		ground.scale.setTo(2, 2);
 
 		//player
-		player = game.add.sprite(30, game.world.height-256, 'player');
+		player = game.add.sprite(30, screenHeight-200, 'player');
 		player.scale.setTo(3,3);
 		game.physics.arcade.enable(player);
 		player.body.bounce.y = .2;
@@ -89,7 +92,7 @@ window.onload = function(){
 	}
 
 	function addStar(){
-		var star = stars.create(Math.random()*(game.world.width-32), 0, 'star');
+		var star = stars.create(Math.random()*(screenWidth-32), 0, 'star');
 		star.body.gravity.y = 50;
 		star.body.bounce.y = .5;
 	}
@@ -100,16 +103,18 @@ window.onload = function(){
 		coinSfx.play();
 	}
 
-	function rotateWorld() {
-		var i = 0;
-		var ownInt = setInterval(function(){
-			worldgroup.pivot.x = game.world.width / 2;
-			worldgroup.pivot.y = game.world.height / 2;
-			worldgroup.x = worldgroup.pivot.x;
-			worldgroup.y = worldgroup.pivot.y;
-			worldgroup.rotation += Math.PI/10
-			i++;
-			if (i == 10) clearInterval(ownInt);
-		}, 200);	
+	function rotateWorld(){
+		rotateTo = worldgroup.rotation === Math.PI ? 0 : Math.PI;
+		tween = game.add.tween(worldgroup);
+		tween.to({rotation: rotateTo}, 1000);
+		tween.onUpdateCallback(resetWorldRotation, this);
+		tween.start();
+	}
+
+	function resetWorldRotation(){
+		worldgroup.pivot.x = game.world.width / 2;
+		worldgroup.pivot.y = game.world.height / 2;
+		worldgroup.x = worldgroup.pivot.x;
+		worldgroup.y = worldgroup.pivot.y;
 	}
 }
