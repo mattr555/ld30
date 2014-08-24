@@ -57,8 +57,11 @@ window.onload = function(){
             this.physics.arcade.enable(this.ground);
             this.ground.body.immovable = true;
 
-            this.player = this.createPlayer();
-            
+            //worldgroup
+            this.worldgroup = this.game.add.group();
+            this.worldgroup.add(this.backgrounds);
+            this.worldgroup.add(this.platforms);
+
             //stars
             this.stars = this.game.add.group();
             this.stars.enableBody = true;
@@ -67,12 +70,7 @@ window.onload = function(){
             this.starTimer.loop(3000, this.addStar, this);
             this.starTimer.start();
 
-            //worldgroup
-            this.worldgroup = this.game.add.group();
-            this.worldgroup.add(this.backgrounds);
-            this.worldgroup.add(this.platforms);
-            this.worldgroup.add(this.player);
-            this.worldgroup.add(this.stars);
+            this.player = this.createPlayer();
 
             this.bulletgroup = this.game.add.group();
             this.bulletgroup.enableBody = true;
@@ -98,9 +96,13 @@ window.onload = function(){
             this.lastLeft = true;
             this.score = 0;
         },
-        createPlayer: function(){ //lol @ good practices and OOP
+        createPlayer: function(x, y){ //lol @ good practices and OOP
             //player
-            var player = game.add.sprite(30, screenHeight-200, 'player');
+            if (x){
+                var player = game.add.sprite(x, y, 'player');
+            } else {
+                var player = game.add.sprite(30, screenHeight-200, 'player');
+            }
             player.scale.setTo(3,3);
             game.physics.arcade.enable(player);
             player.body.bounce.y = .2;
@@ -141,8 +143,24 @@ window.onload = function(){
         },
 
         addStar: function(){
-            var star = this.stars.create(this.world.randomX, 0, 'star');
+            var otherType = Math.random() > .8;
+            if ((this.flipState && otherType) || (!this.flipState && !otherType)) {
+                var starType = 'darkstar';
+            } else {
+                var starType = 'star';
+            }
+
+            /*if (this.flipState){
+                var star = this.stars.create(this.world.randomX, -1, starType);
+                star.body.gravity.y = 50;
+            } else {
+                var star = this.stars.create(this.world.randomX, screenHeight*2, starType);
+                star.body.gravity.y = -50;
+                star.scale.y = -1;
+            }*/
+            var star = this.stars.create(this.world.randomX, 0, starType);
             star.body.gravity.y = 50;
+            
             star.body.bounce.y = .3 + Math.random()*.2;
             star.anchor.setTo(.5, .5);
         },
@@ -157,9 +175,9 @@ window.onload = function(){
             var bullet = this.bulletgroup.create(this.player.x + 50, this.player.y + 50, 'bullet');
             bullet.anchor.set(.5);
             if (!this.lastLeft){
-                bullet.body.velocity.x = 200;
+                bullet.body.velocity.x = 300;
             } else {
-                bullet.body.velocity.x = -200;
+                bullet.body.velocity.x = -300;
                 bullet.scale.x = -1;
             }
             this.game.physics.enable(bullet);
@@ -196,6 +214,9 @@ window.onload = function(){
             this.worldgroup.y = this.worldgroup.pivot.y;
         },
         resetPlayerPosition: function(){
+            var playerX = this.player.x,
+                playerY = this.player.y;
+
             this.player.kill();
             this.ground.kill();
             this.stars.forEachExists(function(i){i.kill();}, true);
@@ -206,17 +227,16 @@ window.onload = function(){
             this.game.physics.arcade.enable(this.ground);
             this.ground.body.immovable = true;
 
-            this.player = this.createPlayer();
+            this.player = this.createPlayer(playerX, playerY);
 
-            if (this.flipState){
+            /*if (this.flipState){
                 this.starTimer.pause();
             } else {
                 this.starTimer.resume();
-            }
+            }*/
 
             this.flipState = !this.flipState;
         }
-
     }
 
 
