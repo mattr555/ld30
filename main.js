@@ -13,12 +13,15 @@ window.onload = function(){
 		game.load.audio('coinSound', 'assets/coin.wav');
 	}
 
-	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey,
+	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey, hardMode,
 		score = 0, scoreText,
 		screenWidth = 640,
 		screenHeight = 480;
 
 	function create(){
+		// ???
+		hardMode = (location.search == "?hardMode");
+
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 		game.world.setBounds(0,0,640,480*2);
 
@@ -74,7 +77,13 @@ window.onload = function(){
 	function update(){
 		game.physics.arcade.collide(player, platforms);
 		game.physics.arcade.collide(stars, platforms);
-		game.physics.arcade.overlap(player, stars, scoreStar);
+
+		if (hardMode) {
+			game.physics.arcade.collide(player, stars);
+			game.physics.arcade.collide(stars, stars);
+		} else {
+			game.physics.arcade.overlap(player, stars, scoreStar);
+		}
 
 		player.body.velocity.x = 0;
 		if (cursor.right.isDown){
@@ -98,6 +107,10 @@ window.onload = function(){
 		var star = stars.create(Math.random()*(screenWidth-32), 0, 'star');
 		star.body.gravity.y = 50;
 		star.body.bounce.y = .5;
+		if (hardMode) {
+			star.body.collideWorldBounds = true;
+			star.body.bounce.x = .5;
+		}
 	}
 
 	function scoreStar(player, star){
