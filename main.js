@@ -12,9 +12,12 @@ window.onload = function(){
             this.game.load.spritesheet('player', 'assets/player.png', 32, 32);
             this.game.load.image('title', 'assets/title.png');
             this.game.load.image('play', 'assets/play.png');
+            this.game.load.image('bullet', 'assets/bullet.png');
+            this.game.load.image('darkstar', 'assets/darkstar.png');
 
             this.game.load.audio('jumpSound', 'assets/jump.wav');
             this.game.load.audio('coinSound', 'assets/coin.wav');
+            this.game.load.audio('fireSound', 'assets/gunshot.wav');
         },
         create: function(){
             this.game.add.sprite(0,0,'lightbg');
@@ -55,7 +58,7 @@ window.onload = function(){
             this.ground.body.immovable = true;
 
             this.player = this.createPlayer();
-
+            
             //stars
             this.stars = this.game.add.group();
             this.stars.enableBody = true;
@@ -67,9 +70,12 @@ window.onload = function(){
             //worldgroup
             this.worldgroup = this.game.add.group();
             this.worldgroup.add(this.backgrounds);
-            this.worldgroup.add(this.player);
             this.worldgroup.add(this.platforms);
+            this.worldgroup.add(this.player);
             this.worldgroup.add(this.stars);
+
+            this.bulletgroup = this.game.add.group();
+            this.bulletgroup.enableBody = true;
 
             //keyboard control
             this.cursor = this.game.input.keyboard.createCursorKeys();
@@ -77,15 +83,19 @@ window.onload = function(){
             this.cKey.onDown.add(this.rotateWorld, this);
             this.qKey = this.game.input.keyboard.addKey(Phaser.Keyboard.Q);
             this.qKey.onDown.add(function(){this.game.state.start('start')}, this);
+            this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+            this.spaceKey.onDown.add(this.fireBullet, this);
 
             //sounds
             this.jumpSfx = this.game.add.audio('jumpSound');
             this.coinSfx = this.game.add.audio('coinSound');
+            this.fireSfx = this.game.add.audio('fireSound');
 
             //score
             this.scoreText = this.game.add.text(10, 10, '0');
 
             this.flipState = true;
+            this.lastLeft = true;
             this.score = 0;
         },
         createPlayer: function(){ //lol @ good practices and OOP
@@ -108,14 +118,17 @@ window.onload = function(){
             this.physics.arcade.collide(this.player, this.platforms);
             this.physics.arcade.collide(this.stars, this.platforms);
             this.physics.arcade.overlap(this.player, this.stars, this.scoreStar, null, this);
+            this.physics.arcade.overlap(this.bulletgroup, this.stars, this.shootStar, null, this);
 
             this.player.body.velocity.x = 0;
             if (this.cursor.right.isDown){
                 this.player.body.velocity.x = 150;
                 this.player.animations.play('right');
+                this.lastLeft = false;
             } else if (this.cursor.left.isDown){
                 this.player.body.velocity.x = -150;
                 this.player.animations.play('left');
+                this.lastLeft = true;
             } else {
                 this.player.animations.stop();
                 this.player.frame = 2;
@@ -138,6 +151,26 @@ window.onload = function(){
             this.score += 10;
             this.updateScore();
             this.coinSfx.play();
+        },
+
+        fireBullet: function(){
+            var bullet = this.bulletgroup.create(this.player.x + 50, this.player.y + 50, 'bullet');
+            bullet.anchor.set(.5);
+            if (!this.lastLeft){
+                bullet.body.velocity.x = 200;
+            } else {
+                bullet.body.velocity.x = -200;
+                bullet.scale.x = -1;
+            }
+            this.game.physics.enable(bullet);
+            this.fireSfx.play();
+        },
+
+        shootStar: function(bullet, star){
+            star.kill();
+            bullet.kill();
+            this.score += 10;
+            this.updateScore();
         },
 
         updateScore: function(){
