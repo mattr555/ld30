@@ -14,7 +14,7 @@ window.onload = function(){
 	}
 
 	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey,
-		score = 0,
+		score = 0, scoreText,
 		screenWidth = 640,
 		screenHeight = 480;
 
@@ -66,6 +66,9 @@ window.onload = function(){
 		//sounds
 		jumpSfx = game.add.audio('jumpSound');
 		coinSfx = game.add.audio('coinSound');
+
+		//score text
+		scoreText = game.add.text(10, 10, "0", {'font': 'normal 22pt "Comic Sans MS"'});
 	}
 
 	function update(){
@@ -100,6 +103,8 @@ window.onload = function(){
 	function scoreStar(player, star){
 		star.kill();
 		score += 10;
+		scoreText.text = score;
+		scoreText.fill = '#'+Math.floor(Math.random()*16777215).toString(16);
 		coinSfx.play();
 	}
 
