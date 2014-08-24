@@ -13,25 +13,29 @@ window.onload = function(){
 		game.load.audio('coinSound', 'assets/coin.wav');
 	}
 
-	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey,
+	var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey, ground,
 		score = 0,
 		screenWidth = 640,
 		screenHeight = 480;
 
 	function create(){
 		game.physics.startSystem(Phaser.Physics.ARCADE);
-		game.world.setBounds(0,0,640,480*2);
+		game.world.setBounds(0,0,screenWidth,screenHeight*2);
 
 		//backgrounds
 		backgrounds = game.add.group();
 		backgrounds.create(0,0,'lightbg');
+		var dbg = backgrounds.create(screenWidth/2, screenHeight*1.5, 'darkbg');
+		dbg.anchor.setTo(.5, .5);
+		dbg.scale.y *= -1;
 
 		//platforms
 		platforms = game.add.group();
 		platforms.enableBody = true;
-		var ground = platforms.create(0, screenHeight-64, 'ground');
+		ground = platforms.create(0, screenHeight-50, 'ground');
+		game.physics.arcade.enable(ground);
 		ground.body.immovable = true;
-		ground.scale.setTo(2, 2);
+		ground.scale.setTo(2, 1);
 
 		//player
 		player = game.add.sprite(30, screenHeight-200, 'player');
@@ -73,6 +77,9 @@ window.onload = function(){
 		game.physics.arcade.collide(stars, platforms);
 		game.physics.arcade.overlap(player, stars, scoreStar);
 
+		game.debug.body(player);
+		platforms.forEachExists(function(i){game.debug.body(i)}, true);
+
 		player.body.velocity.x = 0;
 		if (cursor.right.isDown){
 			player.body.velocity.x = 150;
@@ -94,7 +101,7 @@ window.onload = function(){
 	function addStar(){
 		var star = stars.create(Math.random()*(screenWidth-32), 0, 'star');
 		star.body.gravity.y = 50;
-		star.body.bounce.y = .5;
+		star.body.bounce.y = .3 + Math.random()*.2;
 	}
 
 	function scoreStar(player, star){
@@ -104,10 +111,13 @@ window.onload = function(){
 	}
 
 	function rotateWorld(){
+		player.body.collideWorldBounds = false;
+		player.body.moves = false;
 		rotateTo = worldgroup.rotation === Math.PI ? 0 : Math.PI;
 		tween = game.add.tween(worldgroup);
 		tween.to({rotation: rotateTo}, 1000);
 		tween.onUpdateCallback(resetWorldRotation, this);
+		tween.onComplete.add(resetPlayerPosition, this);
 		tween.start();
 	}
 
@@ -116,5 +126,26 @@ window.onload = function(){
 		worldgroup.pivot.y = game.world.height / 2;
 		worldgroup.x = worldgroup.pivot.x;
 		worldgroup.y = worldgroup.pivot.y;
+	}
+
+	function resetPlayerPosition(){
+		if (worldgroup.rotation === 0) {
+			player.x = 30;
+			player.y = screenHeight-200;
+			player.angle = 0;
+			ground.reset(0, screenHeight-50);
+			ground.angle = 0;
+		} else {
+			player.x = screenWidth - 30;
+			player.y = screenHeight + 200;
+			player.angle = 180;
+		}
+		ground.reset(0, screenHeight-50);
+		player.body.moves = true;
+
+		player.body.gravity.y *= -1;
+		player.body.velocity.x = 0;
+		player.body.velocity.y = 0;
+		player.body.collideWorldBounds = true;
 	}
 }
