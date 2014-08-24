@@ -14,9 +14,11 @@ window.onload = function(){
     }
 
     var worldgroup, platforms, player, backgrounds, cursor, jumpSfx, coinSfx, stars, cKey, ground,
+        starTimer,
         score = 0,
         screenWidth = 640,
-        screenHeight = 480;
+        screenHeight = 480,
+        flipState = true;
 
     function create(){
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -38,23 +40,15 @@ window.onload = function(){
         game.physics.arcade.enable(ground);
         ground.body.immovable = true;
 
-        //player
-        player = game.add.sprite(30, screenHeight-200, 'player');
-        player.scale.setTo(3,3);
-        game.physics.arcade.enable(player);
-        player.body.bounce.y = .2;
-        player.body.gravity.y = 100;
-        player.body.collideWorldBounds = true;
-
-        //player animations
-        player.animations.add('left', [0,1], 5, true);
-        player.animations.add('right', [3,4], 5, true);
+        player = createPlayer();
 
         //stars
         stars = game.add.group();
         stars.enableBody = true;
         addStar();
-        game.time.events.loop(3000, addStar, this);
+        starTimer = game.time.create(false);
+        starTimer.loop(3000, addStar, this);
+        starTimer.start();
 
         //worldgroup
         worldgroup = game.add.group();
@@ -72,6 +66,22 @@ window.onload = function(){
         jumpSfx = game.add.audio('jumpSound');
         coinSfx = game.add.audio('coinSound');
 
+    }
+
+    function createPlayer(){ //lol @ good practices and OOP
+        //player
+        var player = game.add.sprite(30, screenHeight-200, 'player');
+        player.scale.setTo(3,3);
+        game.physics.arcade.enable(player);
+        player.body.bounce.y = .2;
+        player.body.gravity.y = 100;
+        player.body.collideWorldBounds = true;
+
+        //player animations
+        player.animations.add('left', [0,1], 5, true);
+        player.animations.add('right', [3,4], 5, true);
+
+        return player;
     }
 
     function update(){
@@ -98,9 +108,11 @@ window.onload = function(){
     }
 
     function render(){
+        /*
         game.debug.body(player);
         game.debug.body(ground);
         stars.forEachExists(function(i){game.debug.body(i)}, true);
+        */
     }
 
     function checkBodyCollide(obj, gnd){
@@ -150,11 +162,14 @@ window.onload = function(){
         game.physics.arcade.enable(ground);
         ground.body.immovable = true;
 
-        player = game.add.sprite(30, screenHeight-200, 'player');
-        player.scale.setTo(3,3);
-        game.physics.arcade.enable(player);
-        player.body.bounce.y = .2;
-        player.body.gravity.y = 100;
-        player.body.collideWorldBounds = true;
+        player = createPlayer();
+
+        if (flipState){
+            starTimer.pause();
+        } else {
+            starTimer.resume();
+        }
+
+        flipState = !flipState;
     }
 }
