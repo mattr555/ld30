@@ -9,7 +9,7 @@ window.onload = function(){
             this.game.load.image('darkbg', 'assets/darkbg.png');
             this.game.load.image('ground', 'assets/platform.png');
             this.game.load.image('star', 'assets/star.png');
-            this.game.load.spritesheet('player', 'assets/player.png', 32, 32);
+            this.game.load.spritesheet('player', 'assets/player2.png', 16, 32);
             this.game.load.image('title', 'assets/title.png');
             this.game.load.image('play', 'assets/play.png');
             this.game.load.image('bullet', 'assets/bullet.png');
@@ -19,6 +19,7 @@ window.onload = function(){
             this.game.load.audio('coinSound', 'assets/coin.wav');
             this.game.load.audio('fireSound', 'assets/gunshot.wav');
             this.game.load.audio('hitSound', 'assets/hit.wav');
+            this.game.load.audio('wooshSound', 'assets/woosh.wav');
         },
         create: function(){
             this.game.add.sprite(0,0,'lightbg');
@@ -70,9 +71,9 @@ window.onload = function(){
             //stars
             this.stars = this.game.add.group();
             this.stars.enableBody = true;
-            this.addStar();
             this.starTimer = this.time.create(false);
             this.starTimer.loop(3000, this.addStar, this);
+            this.addStar();
             this.starTimer.start();
 
             this.player = this.createPlayer();
@@ -82,8 +83,8 @@ window.onload = function(){
 
             //keyboard control
             this.cursor = this.game.input.keyboard.createCursorKeys();
-            this.cKey = this.game.input.keyboard.addKey(Phaser.Keyboard.C);
-            this.cKey.onDown.add(this.rotateWorld, this);
+            /*this.cKey = this.game.input.keyboard.addKey(Phaser.Keyboard.C);
+            this.cKey.onDown.add(this.rotateWorld, this);*/
             this.qKey = this.game.input.keyboard.addKey(Phaser.Keyboard.Q);
             this.qKey.onDown.add(function(){this.game.state.start('start')}, this);
             this.spaceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -93,6 +94,8 @@ window.onload = function(){
             this.jumpSfx = this.game.add.audio('jumpSound');
             this.coinSfx = this.game.add.audio('coinSound');
             this.fireSfx = this.game.add.audio('fireSound');
+            this.hitSfx = this.game.add.audio('hitSound');
+            this.wooshSfx = this.game.add.audio('wooshSound');
 
             //score
             this.scoreText = this.game.add.text(10, 10, '0');
@@ -166,12 +169,15 @@ window.onload = function(){
                 star.kill();
                 this.score += 10;
                 this.updateScore();
-                this.coinSfx.play();
                 if (star.key === 'darkstar'){
+                    this.wooshSfx.play();
                     this.rotateWorld();
+                } else {
+                    this.coinSfx.play();
                 }
             } else {
-                game.state.start('killingLose');
+                this.hitSfx.onStop.add(function(){game.state.start('pacifistLose')});
+                this.hitSfx.play();
             }
         },
 
@@ -192,14 +198,17 @@ window.onload = function(){
             if (!this.flipState){
                 star.kill();
                 bullet.kill();
-                this.coinSfx.play();
                 this.score += 10;
                 this.updateScore();
                 if (star.key === 'star') {
+                    this.wooshSfx.play();
                     this.rotateWorld();
+                } else {
+                    this.coinSfx.play();
                 }
             } else {
-                game.state.start('pacifistLose');
+                this.hitSfx.onStop.add(function(){game.state.start('pacifistLose')});
+                this.hitSfx.play();
             }            
         },
 
@@ -214,7 +223,7 @@ window.onload = function(){
 
             var rotateTo = this.flipState ? Math.PI : 0;
             var tween = this.game.add.tween(this.worldgroup);
-            tween.to({rotation: rotateTo}, 1000);
+            tween.to({rotation: rotateTo}, 800);
             tween.onUpdateCallback(this.resetWorldRotation, this);
             tween.onComplete.add(this.resetPlayerPosition, this);
             tween.start();
