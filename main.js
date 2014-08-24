@@ -18,6 +18,7 @@ window.onload = function(){
             this.game.load.audio('jumpSound', 'assets/jump.wav');
             this.game.load.audio('coinSound', 'assets/coin.wav');
             this.game.load.audio('fireSound', 'assets/gunshot.wav');
+            this.game.load.audio('hitSound', 'assets/hit.wav');
         },
         create: function(){
             this.game.add.sprite(0,0,'lightbg');
@@ -40,6 +41,10 @@ window.onload = function(){
         create: function(){
             this.physics.startSystem(Phaser.Physics.ARCADE);
             this.world.setBounds(0,0,screenWidth,screenHeight*2);
+
+            this.flipState = true;
+            this.lastLeft = true;
+            this.score = 0;
 
             //backgrounds
             this.backgrounds = this.game.add.group();
@@ -91,10 +96,6 @@ window.onload = function(){
 
             //score
             this.scoreText = this.game.add.text(10, 10, '0');
-
-            this.flipState = true;
-            this.lastLeft = true;
-            this.score = 0;
         },
         createPlayer: function(x, y){ //lol @ good practices and OOP
             //player
@@ -155,12 +156,23 @@ window.onload = function(){
             
             star.body.bounce.y = .3 + Math.random()*.2;
             star.anchor.setTo(.5, .5);
+
+            if (otherType){
+                this.starTimer.pause();
+            }
         },
         scoreStar: function(player, star){
-            star.kill();
-            this.score += 10;
-            this.updateScore();
-            this.coinSfx.play();
+            if (this.flipState) {
+                star.kill();
+                this.score += 10;
+                this.updateScore();
+                this.coinSfx.play();
+                if (star.key === 'darkstar'){
+                    this.rotateWorld();
+                }
+            } else {
+                game.state.start('killingLose');
+            }
         },
 
         fireBullet: function(){
@@ -177,10 +189,18 @@ window.onload = function(){
         },
 
         shootStar: function(bullet, star){
-            star.kill();
-            bullet.kill();
-            this.score += 10;
-            this.updateScore();
+            if (!this.flipState){
+                star.kill();
+                bullet.kill();
+                this.coinSfx.play();
+                this.score += 10;
+                this.updateScore();
+                if (star.key === 'star') {
+                    this.rotateWorld();
+                }
+            } else {
+                game.state.start('pacifistLose');
+            }            
         },
 
         updateScore: function(){
@@ -220,14 +240,13 @@ window.onload = function(){
             this.ground.body.immovable = true;
 
             this.player = this.createPlayer(playerX, playerY);
-
+            this.starTimer.resume();
             this.flipState = !this.flipState;
         }
     }
 
     function LoseState(message){
         this.message = message;
-        this.i = 0;
     }
 
     LoseState.prototype = {
@@ -240,6 +259,7 @@ window.onload = function(){
             this.messageTimer = this.time.create(false);
             this.messageTimer.loop(1000, this.addMessage, this);
             this.messageTimer.start();
+            this.i = 0;
         },
         addMessage: function(){
             if (this.i < this.message.length){
