@@ -32,10 +32,11 @@ window.onload = function(){
 		//platforms
 		platforms = game.add.group();
 		platforms.enableBody = true;
-		ground = platforms.create(0, screenHeight-50, 'ground');
+		ground = platforms.create(screenWidth/2, screenHeight, 'ground');
+		ground.anchor.setTo(.5,.5);
+		ground.scale.setTo(2, 1);
 		game.physics.arcade.enable(ground);
 		ground.body.immovable = true;
-		ground.scale.setTo(2, 1);
 
 		//player
 		player = game.add.sprite(30, screenHeight-200, 'player');
@@ -74,7 +75,7 @@ window.onload = function(){
 	}
 
 	function update(){
-		game.physics.arcade.collide(player, platforms, function(){console.log('hit')});
+		game.physics.arcade.collide(player, platforms, null, checkBodyCollide);
 		game.physics.arcade.collide(stars, platforms);
 		game.physics.arcade.overlap(player, stars, scoreStar);
 
@@ -102,10 +103,15 @@ window.onload = function(){
 		stars.forEachExists(function(i){game.debug.body(i)}, this);
 	}
 
+	function checkBodyCollide(obj, gnd){
+		return true;
+	}
+
 	function addStar(){
 		var star = stars.create(Math.random()*(screenWidth-32), 0, 'star');
 		star.body.gravity.y = 50;
 		star.body.bounce.y = .3 + Math.random()*.2;
+		star.anchor.setTo(.5, .5);
 	}
 
 	function scoreStar(player, star){
@@ -117,6 +123,7 @@ window.onload = function(){
 	function rotateWorld(){
 		player.body.collideWorldBounds = false;
 		player.body.moves = false;
+		stars.forEachExists(function(i){i.kill()}, true);
 		rotateTo = worldgroup.rotation === Math.PI ? 0 : Math.PI;
 		tween = game.add.tween(worldgroup);
 		tween.to({rotation: rotateTo}, 1000);
@@ -133,28 +140,20 @@ window.onload = function(){
 	}
 
 	function resetPlayerPosition(){
-		if (worldgroup.rotation === 0) {
-			player.x = 30;
-			player.y = screenHeight-200;
-			player.angle = 0;
-			game.camera.y = 0;
-			// ground.body.setSize(screenWidth, 100, 0, 0);			
-			ground.reset(0, screenHeight - 50);
-			ground.angle = 0
-		} else {
-			player.x = screenWidth - 30;
-			player.y = screenHeight + 200;
-			player.angle = 180;
-			game.camera.y = screenHeight/2;
-			// ground.body.setSize(screenWidth, 100, -1*screenWidth, -100);
-			ground.reset(screenWidth, screenHeight + 50);
-			ground.angle = 180;
-		}
+		player.kill();
+		ground.kill();
 
-		player.body.gravity.y *= -1;
-		player.body.velocity.x = 0;
-		player.body.velocity.y = 0;
+		player = game.add.sprite(30, screenHeight-200, 'player');
+		ground = platforms.create(screenWidth/2, screenHeight, 'ground');
+		ground.scale.setTo(2, 1);
+		ground.anchor.set(.5);
+		game.physics.arcade.enable(ground);
+		ground.body.immovable = true;
+
+		player.scale.setTo(3,3);
+		game.physics.arcade.enable(player);
+		player.body.bounce.y = .2;
+		player.body.gravity.y = 100
 		player.body.collideWorldBounds = true;
-		player.body.moves = true;
 	}
 }
