@@ -150,14 +150,6 @@ window.onload = function(){
                 var starType = 'star';
             }
 
-            /*if (this.flipState){
-                var star = this.stars.create(this.world.randomX, -1, starType);
-                star.body.gravity.y = 50;
-            } else {
-                var star = this.stars.create(this.world.randomX, screenHeight*2, starType);
-                star.body.gravity.y = -50;
-                star.scale.y = -1;
-            }*/
             var star = this.stars.create(this.world.randomX, 0, starType);
             star.body.gravity.y = 50;
             
@@ -229,19 +221,52 @@ window.onload = function(){
 
             this.player = this.createPlayer(playerX, playerY);
 
-            /*if (this.flipState){
-                this.starTimer.pause();
-            } else {
-                this.starTimer.resume();
-            }*/
-
             this.flipState = !this.flipState;
         }
     }
+
+    function LoseState(message){
+        this.message = message;
+        this.i = 0;
+    }
+
+    LoseState.prototype = {
+        create: function(){
+            this.game.add.sprite(0,0,'lightbg');
+            this.game.add.sprite(0, screenHeight - 50, 'ground').scale.setTo(2, 1);
+
+            this.addMessage();
+
+            this.messageTimer = this.time.create(false);
+            this.messageTimer.loop(1000, this.addMessage, this);
+            this.messageTimer.start();
+        },
+        addMessage: function(){
+            if (this.i < this.message.length){
+                var txt = this.game.add.text(screenWidth/2, 100 + (this.i * 50), this.message[this.i]);
+                txt.anchor.set(.5);
+            } else if (this.i === this.message.length) {
+                var btn = this.game.add.button(screenWidth/2, 150 + (this.i*50), 'play', this.startGame, this);
+                btn.anchor.set(.5);
+                this.messageTimer.destroy();
+            }
+            this.i++;
+        },
+        startGame: function(){
+            this.game.state.start('game');
+        }
+    }
+
+    var pacifistLose = new LoseState(['You just shot a star.',
+        'Why did you do that?', 'The star community prosecuted you.']);
+    var killingLose = new LoseState(['Why did you just go up to that star?',
+        'He was obviously a mugger.', 'Sorry.']);
 
 
     var game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, 'game');
     game.state.add('start', StartState);
     game.state.add('game', GameState);
+    game.state.add('pacifistLose', pacifistLose);
+    game.state.add('killingLose', killingLose);
     game.state.start('start');
 }
