@@ -82,6 +82,9 @@ window.onload = function(){
             this.jumpSfx = this.game.add.audio('jumpSound');
             this.coinSfx = this.game.add.audio('coinSound');
 
+            //score
+            this.scoreText = this.game.add.text(10, 10, '0');
+
             this.flipState = true;
             this.score = 0;
         },
@@ -125,7 +128,7 @@ window.onload = function(){
         },
 
         addStar: function(){
-            var star = this.stars.create(Math.random()*(screenWidth-32), 0, 'star');
+            var star = this.stars.create(this.world.randomX, 0, 'star');
             star.body.gravity.y = 50;
             star.body.bounce.y = .3 + Math.random()*.2;
             star.anchor.setTo(.5, .5);
@@ -133,7 +136,12 @@ window.onload = function(){
         scoreStar: function(player, star){
             star.kill();
             this.score += 10;
+            this.updateScore();
             this.coinSfx.play();
+        },
+
+        updateScore: function(){
+            this.scoreText.text = this.score.toString();
         },
 
         rotateWorld: function(){
