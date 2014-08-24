@@ -1,6 +1,6 @@
 window.onload = function(){
 	var game = new Phaser.Game(640, 480, Phaser.AUTO,
-		'game', {preload: preload, create: create, update: update});
+		'game', {preload: preload, create: create, update: update, render: render});
 
 	function preload(){
 		game.load.image('lightbg', 'assets/lightbg.png');
@@ -53,7 +53,7 @@ window.onload = function(){
 		stars = game.add.group();
 		stars.enableBody = true;
 		addStar();
-		setInterval(addStar, 3000);
+		game.time.events.loop(3000, addStar, this);
 
 		//worldgroup
 		worldgroup = game.add.group();
@@ -70,15 +70,13 @@ window.onload = function(){
 		//sounds
 		jumpSfx = game.add.audio('jumpSound');
 		coinSfx = game.add.audio('coinSound');
+
 	}
 
 	function update(){
-		game.physics.arcade.collide(player, platforms);
+		game.physics.arcade.collide(player, platforms, function(){console.log('hit')});
 		game.physics.arcade.collide(stars, platforms);
 		game.physics.arcade.overlap(player, stars, scoreStar);
-
-		game.debug.body(player);
-		platforms.forEachExists(function(i){game.debug.body(i)}, true);
 
 		player.body.velocity.x = 0;
 		if (cursor.right.isDown){
@@ -96,6 +94,12 @@ window.onload = function(){
 			player.body.velocity.y = -150;
 			jumpSfx.play();
 		}
+	}
+
+	function render(){
+		game.debug.body(player);
+		game.debug.body(ground);
+		stars.forEachExists(function(i){game.debug.body(i)}, this);
 	}
 
 	function addStar(){
@@ -133,19 +137,24 @@ window.onload = function(){
 			player.x = 30;
 			player.y = screenHeight-200;
 			player.angle = 0;
-			ground.reset(0, screenHeight-50);
-			ground.angle = 0;
+			game.camera.y = 0;
+			// ground.body.setSize(screenWidth, 100, 0, 0);			
+			ground.reset(0, screenHeight - 50);
+			ground.angle = 0
 		} else {
 			player.x = screenWidth - 30;
 			player.y = screenHeight + 200;
 			player.angle = 180;
+			game.camera.y = screenHeight/2;
+			// ground.body.setSize(screenWidth, 100, -1*screenWidth, -100);
+			ground.reset(screenWidth, screenHeight + 50);
+			ground.angle = 180;
 		}
-		ground.reset(0, screenHeight-50);
-		player.body.moves = true;
 
 		player.body.gravity.y *= -1;
 		player.body.velocity.x = 0;
 		player.body.velocity.y = 0;
 		player.body.collideWorldBounds = true;
+		player.body.moves = true;
 	}
 }
