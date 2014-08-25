@@ -176,8 +176,9 @@ window.onload = function(){
                     this.coinSfx.play();
                 }
             } else {
-                this.hitSfx.onStop.add(function(){game.state.start('pacifistLose')});
+                this.hitSfx.onStop.add(function(){game.state.start('killingLose')});
                 this.hitSfx.play();
+                this.pauseMotion();
             }
         },
 
@@ -209,6 +210,7 @@ window.onload = function(){
             } else {
                 this.hitSfx.onStop.add(function(){game.state.start('pacifistLose')});
                 this.hitSfx.play();
+                this.pauseMotion();
             }            
         },
 
@@ -251,6 +253,14 @@ window.onload = function(){
             this.player = this.createPlayer(playerX, playerY);
             this.starTimer.resume();
             this.flipState = !this.flipState;
+        },
+        pauseMotion: function(){
+            var stopMove = function(i){
+                i.body.moves = false;
+            }
+            this.player.body.moves = false;
+            this.stars.forEachExists(stopMove, true);
+            this.bulletgroup.forEachExists(stopMove, true);
         }
     }
 
